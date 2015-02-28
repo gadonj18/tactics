@@ -18,7 +18,7 @@ public class Player : MonoBehaviour {
 	private float runSpeed = 0.9f;
 	
 	public void MoveTo(GameObject tile) {
-		StartCoroutine("MoveToTile", tile);
+		if(!moving) StartCoroutine("MoveToTile", tile);
 	}
 	
 	private IEnumerator MoveToTile(GameObject tile) {

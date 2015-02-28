@@ -13,15 +13,10 @@ public class Game : MonoBehaviour {
 
 	private List<GameObject> Players = new List<GameObject>();
 	private int currentPlayerIdx;
-	private List<Vector2> CameraPositions = new List<Vector2>() {
-		new Vector2(-4.5f, -4.5f),
-		new Vector2(4.5f, -4.5f),
-		new Vector2(4.5f, 4.5f),
-		new Vector2(-4.5f, 4.5f)
-	};
-	private int currentCameraRotation = 0;
-	private Vector3 targetCameraPosition;
-	private Quaternion targetCameraRotation;
+
+	public GameObject CurrentPlayer {
+		get { return Players [currentPlayerIdx]; }
+	}
 
 	void Start () {
 		//Create the level
@@ -45,48 +40,24 @@ public class Game : MonoBehaviour {
 		Players.Add(golem);
 		currentPlayerIdx = 0;
 
-		targetCameraPosition = new Vector3(
-			Players[currentPlayerIdx].transform.position.x + CameraPositions[currentCameraRotation].x,
-			4f,
-			Players[currentPlayerIdx].transform.position.z + CameraPositions[currentCameraRotation].y
-			);
-	        targetCameraRotation = Quaternion.LookRotation(Players[currentPlayerIdx].transform.position - targetCameraPosition);
+		mainCamera.GetComponent<CameraController>().gameLogic = this;
 	}
 
 	void Update () {
-		bool cameraChanged = false;
+		//Acting like an input manager
 		if(Input.GetKeyUp(KeyCode.RightArrow)) {
-			currentCameraRotation++;
-			if(currentCameraRotation > 3) currentCameraRotation = 0;
-			cameraChanged = true;
+			mainCamera.GetComponent<CameraController>().RotateRight();
 		} else if(Input.GetKeyUp(KeyCode.LeftArrow)) {
-			currentCameraRotation--;
-			if(currentCameraRotation < 0) currentCameraRotation = 3;
-			cameraChanged = true;
+			mainCamera.GetComponent<CameraController>().RotateLeft();
 		}
 		if(Input.GetMouseButtonUp(0)) {
 			System.Reflection.MethodInfo method = this.GetType().GetMethod(state.ToString() + "_Click", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
 			if(method != null) method.Invoke(this, null);
 		}
-
-		if(cameraChanged) {
-			targetCameraPosition = new Vector3(
-				Players[currentPlayerIdx].transform.position.x + CameraPositions[currentCameraRotation].x,
-				4f,
-	       		Players[currentPlayerIdx].transform.position.z + CameraPositions[currentCameraRotation].y
-			);
-	        targetCameraRotation = Quaternion.LookRotation(Players[currentPlayerIdx].transform.position - targetCameraPosition);
-		}
-		if(mainCamera.transform.position != targetCameraPosition) {
-			mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, targetCameraPosition, Time.deltaTime * 3f);
-		}
-		if(mainCamera.transform.rotation != targetCameraRotation) {
-			mainCamera.transform.rotation = Quaternion.Lerp(mainCamera.transform.rotation, targetCameraRotation, Time.deltaTime * 4.5f);
-		}
 	}
 
 	private void Move_Click() {
-		Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+		Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
 		RaycastHit hit = new RaycastHit();
 		if(Physics.Raycast(ray, out hit)) {
 			if(hit.transform.gameObject.name == "Tile(Clone)") {
